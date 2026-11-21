@@ -1,0 +1,41 @@
+
+name: Compilar Mod Fisica
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      - name: Baixar Forge e compilar
+        run: |
+          curl -fsSL -o mdk.zip https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.1-47.4.0/forge-1.20.1-47.4.0-mdk.zip
+          mkdir mdk
+          unzip -q mdk.zip -d mdk
+          mkdir -p mdk/src/main/java/com/fisicamod
+          cp FisicaMod.java mdk/src/main/java/com/fisicamod/FisicaMod.java
+          sed -i 's/^mod_id=.*/mod_id=fisicamod/' mdk/gradle.properties
+          sed -i 's/^mod_name=.*/mod_name=Fisica Realista Mod/' mdk/gradle.properties
+          sed -i 's/^mod_group_id=.*/mod_group_id=com.fisicamod/' mdk/gradle.properties
+          sed -i 's/^mod_version=.*/mod_version=1.0.0/' mdk/gradle.properties
+          cd mdk
+          chmod +x gradlew
+          ./gradlew build --no-daemon
+
+      - name: Enviar arquivo JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: fisicamod-1.20.1-forge
+          path: mdk/build/libs/*.jar
